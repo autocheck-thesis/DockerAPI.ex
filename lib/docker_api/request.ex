@@ -27,33 +27,29 @@ defmodule DockerAPI.Request do
       {:ok, %HTTPoison.AsyncResponse{}} = HTTPoison.request(method, url, body, headers, options)
       stream_loop(nil, [])
     end)
-    Task.await(task, :infinity)
+    case Task.await(task, :infinity) do
+      {:ok, data} -> data
+      {:error, reason} -> raise DockerAPI.RequestError, message: reason
+    end
   end
 
-  def stream_loop(status, acc) do
+  defp stream_loop(status, acc) do
     receive do
-      %HTTPoison.AsyncStatus{code: new_status} ->
-        stream_loop(new_status, acc)
-      %HTTPoison.AsyncHeaders{} ->
-        stream_loop(status, acc)
-      %HTTPoison.AsyncChunk{chunk: chunk} ->
-        stream_loop(status, [Poison.decode!(chunk)|acc])
-      %HTTPoison.AsyncEnd{} ->
-        {status, Enum.reverse(acc)}
-      %HTTPoison.Error{reason: reason} ->
-        {:error, reason}
-    after
-      30_000 ->
-        {:error, :timeout}
+      %HTTPoison.AsyncStatus{code: new_status} -> stream_loop(new_status, acc)
+      %HTTPoison.AsyncHeaders{}                -> stream_loop(status, acc)
+      %HTTPoison.AsyncChunk{chunk: chunk}      -> stream_loop(status, [Poison.decode!(chunk)|acc])
+      %HTTPoison.AsyncEnd{}                    -> {:ok, Enum.reverse(acc)}
+      %HTTPoison.Error{reason: reason}         -> {:error, reason}
+    after 30_000                               -> {:error, "Request timed out"}
     end
   end
 
 
-  def body_parser(%{body: "", status: status_code}) when status_code < 400, do: :ok
-  def body_parser(%{body: body, status: status_code}) when status_code >= 400 do
+  defp body_parser(%{body: "", status: status_code}) when status_code < 400, do: :ok
+  defp body_parser(%{body: body, status: status_code}) when status_code >= 400 do
     raise DockerAPI.RequestError, message: body
   end
-  def body_parser(%{headers: headers, body: body}) do
+  defp body_parser(%{headers: headers, body: body}) do
     if {"Content-Type", "application/json"} in headers do
       Poison.decode!(body)
     else
