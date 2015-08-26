@@ -14,7 +14,7 @@ defmodule DockerAPI.Images do
   """
   @spec create(Map.t, DockerAPI.Client.t) :: :ok
   def create(params, client) do
-    R.post(client, "/images/create?"<>URI.encode_query(params), "")
+    R.stream_request(client, :post, "/images/create?"<>URI.encode_query(params), "")
   end
 
   @doc """
@@ -25,7 +25,7 @@ defmodule DockerAPI.Images do
   @spec create(String.t, String.t, DockerAPI.Client.t) :: :ok
   def create(image, tag, client) do
     params = URI.encode_query(%{fromImage: image, tag: tag})
-    R.post(client, "/images/create?"<>params, "")
+    R.stream_request(client, :post,  "/images/create?"<>params, "")
   end
 
   # def inspect(_client), do: throw :not_implemented_yet
