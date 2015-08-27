@@ -1,6 +1,7 @@
 DockerAPI
 =========
 
+Add `ex_dockerapi` do your Mix deps.
 
 ```elixir
 client = DockerAPI.connect()
