@@ -6,8 +6,8 @@ defmodule DockerAPI do
   DockerAPI.Images.create("busybox", "latest", client)
 
   container = %{"Image": "busybox:latest", "Cmd": ["/bin/sleep", "360"]}
-  DockerAPI.Containers.create("busy1", container, client) |> DockerAPI.Containers.start()
-  DockerAPI.Containers.create("busy2", container, client) |> DockerAPI.Containers.start()
+  DockerAPI.Containers.create("busy1", container, client) |> DockerAPI.Containers.start(client)
+  DockerAPI.Containers.create("busy2", container, client) |> DockerAPI.Containers.start(client)
 
   DockerAPI.Containers.list(client) |> Enum.map(&(DockerAPI.Containers.inspect(&1, client)))
 
