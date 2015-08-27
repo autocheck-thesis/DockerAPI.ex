@@ -5,9 +5,9 @@ defmodule DockerAPI.Request do
     {"Content-Type", "application/json"}
   ]
 
-  def get(client, path, headers \\ []), do: request(client, :get, path, "", headers)
-  def delete(client, path, headers \\ []), do: request(client, :delete, path, "", headers)
-  def post(client, path, body \\ "{}", headers \\ []), do: request(client, :post, path, body, headers)
+  def get(client, path, headers \\ @default_headers), do: request(client, :get, path, "", headers)
+  def delete(client, path, headers \\ @default_headers), do: request(client, :delete, path, "", headers)
+  def post(client, path, body \\ "{}", headers \\ @default_headers), do: request(client, :post, path, body, headers)
 
   def request(client, method, path, body \\ "", headers \\ @default_headers, options \\ []) do
     url = client.server<>"/v1.19"<>path
