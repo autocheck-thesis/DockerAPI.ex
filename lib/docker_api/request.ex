@@ -11,7 +11,9 @@ defmodule DockerAPI.Request do
 
   def request(client, method, path, body \\ "", headers \\ @default_headers, options \\ []) do
     url = client.server<>"/v1.19"<>path
-    options = Keyword.merge(options, [:hackney, [ssl_options: client.ssl_options]])
+    options = Keyword.merge(options, [
+      hackney: [ssl_options: client.ssl_options]
+    ])
     {:ok, raw_reply} = HTTPoison.request(method, url, body, headers, options)
     raw_reply |> body_parser
   end
