@@ -1,16 +1,29 @@
 defmodule DockerAPI.Misc do
   alias DockerAPI.Request, as: R
 
+  @doc """
+  Info on the Docker host
+  """
+  @spec info(DockerAPI.Client.t) :: Map.t
   def info(client) do
     R.get(client, "/info")
   end
 
+  @doc """
+  Version information of the Docker host
+  """
+  @spec version(DockerAPI.Client.t) :: Map.t
   def version(client) do
     R.get(client, "/version")
   end
 
+  @doc """
+  Ping the Docker host
+  """
+  @spec ping(DockerAPI.Client.t) :: :ok
   def ping(client) do
-    R.get(client, "/_ping")
+    nil = R.get(client, "/_ping")
+    :ok
   end
 
   # def build(_client), do: throw :not_implemented_yet

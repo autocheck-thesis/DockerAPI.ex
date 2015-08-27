@@ -162,6 +162,8 @@ defmodule DockerAPI.Containers do
 
   @doc """
   Remove the container id from the filesystem
+
+  Optionally force kill the  container if it is running
   """
   @spec remove(String.t | Map.t, Map.t, DockerAPI.Client.t) :: Map.t
   def remove(container, force \\ false, client)
