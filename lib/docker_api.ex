@@ -77,11 +77,12 @@ defmodule DockerAPI do
   end
 
   defp uri_to_string(uri, ssl_enabled \\ true) do
-    if ssl_enabled == true do
-      uri = %{uri | scheme: "https"}
-    else
-      uri = %{uri | scheme: "http"}
-    end
+    uri =
+      if ssl_enabled == true do
+        %{uri | scheme: "https"}
+      else
+        %{uri | scheme: "http"}
+      end
 
     "#{uri.scheme}://#{uri.host}:#{uri.port}"
   end
