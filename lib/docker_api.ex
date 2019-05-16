@@ -21,32 +21,34 @@ defmodule DockerAPI do
   defmodule Client do
     # @moduledoc false
     defstruct ssl_options: [], server: "https://127.0.0.1:2376"
-    @type t :: %{server: String.t, ssl_options: List.t}
+    @type t :: %{server: String.t(), ssl_options: List.t()}
   end
 
   defmodule RequestError do
-    defexception [:message]
+    defexception [:message, :request]
   end
-
 
   @doc """
   Creates a new connection.
 
   Tries to guess based on the DOCKER_HOST, DOCKER_TLS_VERIFY and DOCKER_CERT_PATH environment variables.
   """
-  @spec connect() :: Client.t
+  @spec connect() :: Client.t()
   def connect do
     host_env = System.get_env("DOCKER_HOST")
+
     case System.get_env("DOCKER_TLS_VERIFY") do
       "1" ->
         cert_path_env = System.get_env("DOCKER_CERT_PATH")
+
         %Client{
           server: uri_to_string(URI.parse(host_env)),
           ssl_options: [
-            certfile: to_char_list(cert_path_env<>"/cert.pem"),
-            keyfile: to_char_list(cert_path_env<>"/key.pem")
+            certfile: to_char_list(cert_path_env <> "/cert.pem"),
+            keyfile: to_char_list(cert_path_env <> "/key.pem")
           ]
         }
+
       _ ->
         %Client{server: uri_to_string(URI.parse(host_env), false)}
     end
@@ -55,7 +57,7 @@ defmodule DockerAPI do
   @doc """
   Creates a new connection.
   """
-  @spec connect(String.t) :: Client.t
+  @spec connect(String.t()) :: Client.t()
   def connect(server) do
     %Client{server: server, ssl_options: []}
   end
@@ -63,7 +65,7 @@ defmodule DockerAPI do
   @doc """
   Creates a new SSL connection.
   """
-  @spec connect(String.t, String.t, String.t) :: Client.t
+  @spec connect(String.t(), String.t(), String.t()) :: Client.t()
   def connect(server, certfile_path, keyfile_path) do
     %Client{
       server: server,
@@ -76,11 +78,11 @@ defmodule DockerAPI do
 
   defp uri_to_string(uri, ssl_enabled \\ true) do
     if ssl_enabled == true do
-      uri =  %{uri | scheme: "https"}
+      uri = %{uri | scheme: "https"}
     else
       uri = %{uri | scheme: "http"}
     end
+
     "#{uri.scheme}://#{uri.host}:#{uri.port}"
   end
-
 end

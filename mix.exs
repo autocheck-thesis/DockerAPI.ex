@@ -18,17 +18,13 @@ defmodule DockerAPI.Mixfile do
 
   def application do
     apps = [:logger, :httpoison]
-    dev_apps = Mix.env == :dev && [:reprise] || []
-    [applications: dev_apps ++ apps]
+    [applications: apps]
   end
 
   defp deps do
     [
-      {:ex_doc, "~> 0.8.4", only: :docs},
-      {:earmark, "~> 0.1.17", only: :docs},
-      {:reprise, "~> 0.3.0", only: :dev},
-      {:poison , "~> 1.5.0"},
-      {:httpoison, "~> 0.7.0"}
+      {:poison, "~> 3.1"},
+      {:httpoison, "~> 1.4"}
     ]
   end
 
@@ -43,8 +39,8 @@ defmodule DockerAPI.Mixfile do
       contributors: ["Jón Grétar Borgþórsson"],
       licenses: ["MIT"],
       links: %{
-        "GitHub": "https://github.com/JonGretar/DockerAPI.ex",
-        "Issues": "https://github.com/JonGretar/DockerAPI.ex/issues"
+        GitHub: "https://github.com/JonGretar/DockerAPI.ex",
+        Issues: "https://github.com/JonGretar/DockerAPI.ex/issues"
       }
     ]
   end
