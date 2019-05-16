@@ -44,8 +44,8 @@ defmodule DockerAPI do
         %Client{
           server: uri_to_string(URI.parse(host_env)),
           ssl_options: [
-            certfile: to_char_list(cert_path_env <> "/cert.pem"),
-            keyfile: to_char_list(cert_path_env <> "/key.pem")
+            certfile: to_charlist(cert_path_env <> "/cert.pem"),
+            keyfile: to_charlist(cert_path_env <> "/key.pem")
           ]
         }
 

@@ -74,7 +74,7 @@ defmodule DockerAPI.Request do
         HTTPoison.stream_next(resp)
         # :erlang.garbage_collect()
         [{_, headers}] = :ets.lookup(:request_headers, id)
-        {[try_parse_json(chunk, headers)], resp}
+        {[decode_body(chunk, headers)], resp}
 
       %HTTPoison.AsyncEnd{id: ^id} ->
         if emit_end do
@@ -99,7 +99,7 @@ defmodule DockerAPI.Request do
        })
        when status_code >= 400 do
     message =
-      case try_parse_json(body, headers) do
+      case decode_body(body, headers) do
         %{"message" => message} -> message
         message -> message
       end
@@ -108,14 +108,39 @@ defmodule DockerAPI.Request do
   end
 
   defp body_parser(%HTTPoison.Response{headers: headers, body: body}) do
-    try_parse_json(body, headers)
+    decode_body(body, headers)
   end
 
-  defp try_parse_json(body, headers) do
+  defp decode_body(body, headers) do
     if {"Content-Type", "application/json"} in headers do
-      Poison.decode!(body)
+      case Poison.decode(body) do
+        {:ok, body} -> body
+        body -> body
+      end
     else
-      body
+      case body do
+        # The format is a Header and a Payload (frame).
+        #
+        # The header contains the information which the stream writes (stdout or stderr). It also contains the size of the associated frame encoded in the last four bytes (uint32).
+        #
+        # It is encoded on the first eight bytes like this:
+        #
+        # header := [8]byte{STREAM_TYPE, 0, 0, 0, SIZE1, SIZE2, SIZE3, SIZE4}
+        # STREAM_TYPE can be:
+        #
+        # 0: stdin (is written on stdout)
+        # 1: stdout
+        # 2: stderr
+        # SIZE1, SIZE2, SIZE3, SIZE4 are the four bytes of the uint32 size encoded as big endian.
+        <<stream_type, 0, 0, 0, _size1, _size2, _size3, _size4>> <> payload ->
+          case stream_type do
+            2 -> {:stderr, payload}
+            _ -> {:stdio, payload}
+          end
+
+        body ->
+          {:stdio, body}
+      end
     end
   end
 end

@@ -98,6 +98,15 @@ defmodule DockerAPI.Containers do
     R.stream_request(client, :get, url)
   end
 
+  @spec attach(String.t() | map(), DockerAPI.Client.t()) :: Enumerable.t()
+  def attach(container, client) when is_map(container), do: attach(container["Id"], client)
+
+  def attach(container, client) do
+    query_params = %{stream: true, stdout: true, stderr: true}
+    url = "/containers/#{container}/attach?" <> URI.encode_query(query_params)
+    R.stream_request(client, :post, url)
+  end
+
   # def changes(_client), do: throw :not_implemented_yet
   # def export(_client), do: throw :not_implemented_yet
   # def stats(_client), do: throw :not_implemented_yet
@@ -174,7 +183,6 @@ defmodule DockerAPI.Containers do
     R.post(client, "/containers/#{container}/unpause")
   end
 
-  # def attach(_client), do: throw :not_implemented_yet
   # def attach_ws(_client), do: throw :not_implemented_yet
   # def wait(_client), do: throw :not_implemented_yet
 
