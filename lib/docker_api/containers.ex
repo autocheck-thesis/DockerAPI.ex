@@ -16,9 +16,9 @@ defmodule DockerAPI.Containers do
   Create and start a container with a randomly generated name
 
   See [API Docs](https://docs.docker.com/reference/api/docker_remote_api_v1.20/#create-a-container) for
-  map keys.
+  map() keys.
   """
-  @spec run(Map.t(), DockerAPI.Client.t()) :: Map.t()
+  @spec run(map(), DockerAPI.Client.t()) :: map()
   def run(container, client) do
     result = create(container, client)
     start(result, client)
@@ -29,9 +29,9 @@ defmodule DockerAPI.Containers do
   Create and start a container with a specific name.
 
   See [API Docs](https://docs.docker.com/reference/api/docker_remote_api_v1.20/#create-a-container) for
-  map keys.
+  map() keys.
   """
-  @spec run(String.t(), Map.t(), DockerAPI.Client.t()) :: Map.t()
+  @spec run(String.t(), map(), DockerAPI.Client.t()) :: map()
   def run(name, container, client) do
     result = create(name, container, client)
     start(result, client)
@@ -42,9 +42,9 @@ defmodule DockerAPI.Containers do
   Create a container with a randomly generated name
 
   See [API Docs](https://docs.docker.com/reference/api/docker_remote_api_v1.20/#create-a-container) for
-  map keys.
+  map() keys.
   """
-  @spec create(Map.t(), DockerAPI.Client.t()) :: Map.t()
+  @spec create(map(), DockerAPI.Client.t()) :: map()
   def create(container, client) do
     R.post(client, "/containers/create", Poison.encode!(container))
   end
@@ -53,9 +53,9 @@ defmodule DockerAPI.Containers do
   Create a container with a specific name.
 
   See [API Docs](https://docs.docker.com/reference/api/docker_remote_api_v1.20/#create-a-container) for
-  map keys.
+  map() keys.
   """
-  @spec create(String.t(), Map.t(), DockerAPI.Client.t()) :: Map.t()
+  @spec create(String.t(), map(), DockerAPI.Client.t()) :: map()
   def create(name, container, client) do
     R.post(client, "/containers/create?name=" <> name, Poison.encode!(container))
   end
@@ -68,7 +68,7 @@ defmodule DockerAPI.Containers do
   See [API Docs](https://docs.docker.com/reference/api/docker_remote_api_v1.20/#inspect-a-container) for
   information on the body.
   """
-  @spec inspect(String.t() | Map.t(), DockerAPI.Client.t()) :: Map.t()
+  @spec inspect(String.t() | map(), DockerAPI.Client.t()) :: map()
   def inspect(container, client) when is_map(container),
     do: DockerAPI.Containers.inspect(container["Id"], client)
 
@@ -82,14 +82,16 @@ defmodule DockerAPI.Containers do
   See [API Docs](https://docs.docker.com/reference/api/docker_remote_api_v1.20/#create-a-container) for
   information on the body.
   """
-  @spec top(String.t() | Map.t(), DockerAPI.Client.t()) :: Map.t()
+  @spec top(String.t() | map(), DockerAPI.Client.t()) :: map()
   def top(container, client) when is_map(container), do: top(container["Id"], client)
 
   def top(container, client) do
     R.get(client, "/containers/#{container}/top")
   end
 
-  @spec logs(String.t() | Map.t(), DockerAPI.Client.t()) :: Enumerable.t()
+  @spec logs(String.t() | map(), DockerAPI.Client.t()) :: Enumerable.t()
+  def logs(container, client) when is_map(container), do: logs(container["Id"], client)
+
   def logs(container, client) do
     query_params = %{stderr: true, stdout: true, follow: true, timestamp: false}
     url = "/containers/#{container}/logs?" <> URI.encode_query(query_params)
@@ -104,7 +106,7 @@ defmodule DockerAPI.Containers do
   @doc """
   Start a container in a stopped state
   """
-  @spec start(String.t() | Map.t(), DockerAPI.Client.t()) :: Map.t()
+  @spec start(String.t() | map(), DockerAPI.Client.t()) :: map()
   def start(container, client) when is_map(container), do: start(container["Id"], client)
 
   def start(container, client) do
@@ -114,7 +116,7 @@ defmodule DockerAPI.Containers do
   @doc """
   stop a container in a running state
   """
-  @spec stop(String.t() | Map.t(), DockerAPI.Client.t()) :: Map.t()
+  @spec stop(String.t() | map(), DockerAPI.Client.t()) :: map()
   def stop(container, client) when is_map(container), do: stop(container["Id"], client)
 
   def stop(container, client) do
@@ -124,7 +126,7 @@ defmodule DockerAPI.Containers do
   @doc """
   Restart a running container
   """
-  @spec restart(String.t() | Map.t(), DockerAPI.Client.t()) :: Map.t()
+  @spec restart(String.t() | map(), DockerAPI.Client.t()) :: map()
   def restart(container, client) when is_map(container), do: restart(container["Id"], client)
 
   def restart(container, client) do
@@ -134,7 +136,7 @@ defmodule DockerAPI.Containers do
   @doc """
   Kill a running container
   """
-  @spec kill(String.t() | Map.t(), DockerAPI.Client.t()) :: Map.t()
+  @spec kill(String.t() | map(), DockerAPI.Client.t()) :: map()
   def kill(container, client) when is_map(container), do: kill(container["Id"], client)
 
   def kill(container, client) do
@@ -144,7 +146,7 @@ defmodule DockerAPI.Containers do
   @doc """
   Rename the container id to a new_name
   """
-  @spec rename(String.t() | Map.t(), String.t(), DockerAPI.Client.t()) :: Map.t()
+  @spec rename(String.t() | map(), String.t(), DockerAPI.Client.t()) :: map()
   def rename(container, new_name, client) when is_map(container),
     do: rename(container["Id"], new_name, client)
 
@@ -155,7 +157,7 @@ defmodule DockerAPI.Containers do
   @doc """
   Pause the container
   """
-  @spec pause(String.t() | Map.t(), DockerAPI.Client.t()) :: Map.t()
+  @spec pause(String.t() | map(), DockerAPI.Client.t()) :: map()
   def pause(container, client) when is_map(container), do: pause(container["Id"], client)
 
   def pause(container, client) do
@@ -165,7 +167,7 @@ defmodule DockerAPI.Containers do
   @doc """
   Unpause the container
   """
-  @spec unpause(String.t() | Map.t(), DockerAPI.Client.t()) :: Map.t()
+  @spec unpause(String.t() | map(), DockerAPI.Client.t()) :: map()
   def unpause(container, client) when is_map(container), do: unpause(container["Id"], client)
 
   def unpause(container, client) do
@@ -181,7 +183,7 @@ defmodule DockerAPI.Containers do
 
   Optionally force kill the  container if it is running
   """
-  @spec remove(String.t() | Map.t(), Map.t(), DockerAPI.Client.t()) :: Map.t()
+  @spec remove(String.t() | map(), boolean(), DockerAPI.Client.t()) :: map()
   def remove(container, force \\ false, client)
 
   def remove(container, force, client) when is_map(container),

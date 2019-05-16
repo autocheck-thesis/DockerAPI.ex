@@ -5,7 +5,7 @@ defmodule DockerAPI.Mixfile do
     [
       app: :ex_dockerapi,
       version: "0.0.1",
-      elixir: "~> 1.0",
+      elixir: "~> 1.5",
       deps: deps,
       description: description,
       package: package,
@@ -23,7 +23,7 @@ defmodule DockerAPI.Mixfile do
 
   defp deps do
     [
-      {:poison, "~> 3.1"},
+      {:poison, "~> 4.0"},
       {:httpoison, "~> 1.4"}
     ]
   end

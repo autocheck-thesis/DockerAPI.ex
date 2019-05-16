@@ -4,7 +4,7 @@ defmodule DockerAPI.Misc do
   @doc """
   Info on the Docker host
   """
-  @spec info(DockerAPI.Client.t) :: Map.t
+  @spec info(DockerAPI.Client.t()) :: map()
   def info(client) do
     R.get(client, "/info")
   end
@@ -12,7 +12,7 @@ defmodule DockerAPI.Misc do
   @doc """
   Version information of the Docker host
   """
-  @spec version(DockerAPI.Client.t) :: Map.t
+  @spec version(DockerAPI.Client.t()) :: map()
   def version(client) do
     R.get(client, "/version")
   end
@@ -20,7 +20,7 @@ defmodule DockerAPI.Misc do
   @doc """
   Ping the Docker host
   """
-  @spec ping(DockerAPI.Client.t) :: :ok
+  @spec ping(DockerAPI.Client.t()) :: :ok
   def ping(client) do
     nil = R.get(client, "/_ping")
     :ok
@@ -36,5 +36,4 @@ defmodule DockerAPI.Misc do
   # def exec_create(_client), do: throw :not_implemented_yet
   # def exec_start(_client), do: throw :not_implemented_yet
   # def exec_resize(_client), do: throw :not_implemented_yet
-
 end

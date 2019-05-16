@@ -9,9 +9,9 @@ defmodule DockerAPI do
   DockerAPI.Containers.create("busy1", container, client) |> DockerAPI.Containers.start(client)
   DockerAPI.Containers.create("busy2", container, client) |> DockerAPI.Containers.start(client)
 
-  DockerAPI.Containers.list(client) |> Enum.map(&(DockerAPI.Containers.inspect(&1, client)))
+  DockerAPI.Containers.list(client) |> Enum.map()(&(DockerAPI.Containers.inspect(&1, client)))
 
-  ["busy1", "busy2"] |> Enum.map(fn(container_name) ->
+  ["busy1", "busy2"] |> Enum.map()(fn(container_name) ->
     DockerAPI.Containers.stop(container_name, client)
     DockerAPI.Containers.remove(container_name, client)
   end)
@@ -21,7 +21,7 @@ defmodule DockerAPI do
   defmodule Client do
     # @moduledoc false
     defstruct ssl_options: [], server: "https://127.0.0.1:2376"
-    @type t :: %{server: String.t(), ssl_options: List.t()}
+    @type t :: %__MODULE__{server: String.t(), ssl_options: keyword()}
   end
 
   defmodule RequestError do

@@ -4,7 +4,7 @@ defmodule DockerAPI.Images do
   @doc """
   List images
   """
-  @spec list(DockerAPI.Client.t) :: [Map.t]
+  @spec list(DockerAPI.Client.t()) :: [map()]
   def list(client) do
     R.get(client, "/images/json")
   end
@@ -12,9 +12,9 @@ defmodule DockerAPI.Images do
   @doc """
   Create an image either by pulling it from the registry or by importing it
   """
-  @spec create(Map.t, DockerAPI.Client.t) :: :ok
+  @spec create(map(), DockerAPI.Client.t()) :: :ok
   def create(params, client) do
-    R.stream_request(client, :post, "/images/create?"<>URI.encode_query(params), "")
+    R.stream_request(client, :post, "/images/create?" <> URI.encode_query(params), "")
   end
 
   @doc """
@@ -22,10 +22,10 @@ defmodule DockerAPI.Images do
 
   Same as doing create(%{fromImage: "image", tag: "tag"}, client)
   """
-  @spec create(String.t, String.t, DockerAPI.Client.t) :: :ok
+  @spec create(String.t(), String.t(), DockerAPI.Client.t()) :: :ok
   def create(image, tag, client) do
     params = URI.encode_query(%{fromImage: image, tag: tag})
-    R.stream_request(client, :post,  "/images/create?"<>params, "")
+    R.stream_request(client, :post, "/images/create?" <> params, "")
   end
 
   # def inspect(_client), do: throw :not_implemented_yet
@@ -34,5 +34,4 @@ defmodule DockerAPI.Images do
   # def tag(_client), do: throw :not_implemented_yet
   # def delete(_client), do: throw :not_implemented_yet
   # def search(_client), do: throw :not_implemented_yet
-
 end

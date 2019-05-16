@@ -37,6 +37,10 @@ defmodule DockerAPI.Request do
         async: :once
       )
 
+    if :ets.whereis(:request_headers) == :undefined do
+      :ets.new(:request_headers, [:set, :named_table])
+    end
+
     Stream.resource(
       fn -> HTTPoison.request!(method, url, body, headers, options) end,
       fn
@@ -60,15 +64,17 @@ defmodule DockerAPI.Request do
         HTTPoison.stream_next(resp)
         {[], resp}
 
-      %HTTPoison.AsyncHeaders{id: ^id, headers: _headers} ->
+      %HTTPoison.AsyncHeaders{id: ^id, headers: headers} ->
         # IO.inspect(headers, label: "HEADERS: ")
         HTTPoison.stream_next(resp)
+        :ets.insert(:request_headers, {id, headers})
         {[], resp}
 
       %HTTPoison.AsyncChunk{id: ^id, chunk: chunk} ->
         HTTPoison.stream_next(resp)
         # :erlang.garbage_collect()
-        {[chunk], resp}
+        [{_, headers}] = :ets.lookup(:request_headers, id)
+        {[try_parse_json(chunk, headers)], resp}
 
       %HTTPoison.AsyncEnd{id: ^id} ->
         if emit_end do
@@ -77,7 +83,7 @@ defmodule DockerAPI.Request do
           {:halt, resp}
         end
     after
-      5_000 -> raise "receive timeout"
+      60_000 -> raise "receive timeout"
     end
   end
 
@@ -109,7 +115,6 @@ defmodule DockerAPI.Request do
     if {"Content-Type", "application/json"} in headers do
       Poison.decode!(body)
     else
-      IO.inspect("Body was not json")
       body
     end
   end
