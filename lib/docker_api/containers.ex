@@ -89,21 +89,43 @@ defmodule DockerAPI.Containers do
     R.get(client, "/containers/#{container}/top")
   end
 
-  @spec logs(String.t() | map(), DockerAPI.Client.t()) :: Enumerable.t()
-  def logs(container, client) when is_map(container), do: logs(container["Id"], client)
+  @doc """
+  Stream logs from a container
 
-  def logs(container, client) do
-    query_params = %{stderr: true, stdout: true, follow: true, timestamp: false}
-    url = "/containers/#{container}/logs?" <> URI.encode_query(query_params)
+  See [API Docs](https://docs.docker.com/reference/api/docker_remote_api_v1.20/#create-a-container) for
+  information on the body.
+  """
+  @spec logs(String.t() | map(), DockerAPI.Client.t(), map()) :: Enumerable.t()
+  def logs(
+        container,
+        client,
+        params \\ %{stderr: true, stdout: true, follow: true, timestamp: false}
+      )
+      when is_map(container),
+      do: logs(container["Id"], client)
+
+  def logs(
+        container,
+        client,
+        params \\ %{stderr: true, stdout: true, follow: true, timestamp: false}
+      ) do
+    url = "/containers/#{container}/logs?" <> URI.encode_query(params)
     R.stream_request(client, :get, url)
   end
 
-  @spec attach(String.t() | map(), DockerAPI.Client.t()) :: Enumerable.t()
-  def attach(container, client) when is_map(container), do: attach(container["Id"], client)
+  @doc """
+  Attach to container
 
-  def attach(container, client) do
-    query_params = %{stream: true, stdout: true, stderr: true}
-    url = "/containers/#{container}/attach?" <> URI.encode_query(query_params)
+  See [API Docs](https://docs.docker.com/reference/api/docker_remote_api_v1.20/#create-a-container) for
+  information on the body.
+  """
+  @spec attach(String.t() | map(), DockerAPI.Client.t(), map()) :: Enumerable.t()
+  def attach(container, client, params \\ %{stream: true, stdout: true, stderr: true})
+      when is_map(container),
+      do: attach(container["Id"], client, params)
+
+  def attach(container, client, params \\ %{stream: true, stdout: true, stderr: true}) do
+    url = "/containers/#{container}/attach?" <> URI.encode_query(params)
     R.stream_request(client, :post, url)
   end
 
