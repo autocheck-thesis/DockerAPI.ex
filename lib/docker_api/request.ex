@@ -5,14 +5,20 @@ defmodule DockerAPI.Request do
     {"Content-Type", "application/json"}
   ]
 
+  alias DockerAPI.Client
+
+  @spec get(Client.t(), binary(), List.t()) :: any
   def get(client, path, headers \\ @default_headers), do: request(client, :get, path, "", headers)
 
+  @spec delete(Client.t(), binary(), List.t()) :: any
   def delete(client, path, headers \\ @default_headers),
     do: request(client, :delete, path, "", headers)
 
+  @spec post(Client.t(), binary(), binary(), List.t()) :: any
   def post(client, path, body \\ "{}", headers \\ @default_headers),
     do: request(client, :post, path, body, headers)
 
+  @spec request(Client.t(), atom(), binary(), binary(), List.t(), List.t()) :: any
   def request(client, method, path, body \\ "", headers \\ @default_headers, options \\ []) do
     url = client.server <> path
 
@@ -26,6 +32,8 @@ defmodule DockerAPI.Request do
     raw_reply |> body_parser
   end
 
+  @spec stream_request(Client.t(), atom(), binary(), binary(), List.t(), List.t()) ::
+          Enumerable.t()
   def stream_request(client, method, path, body \\ "", headers \\ @default_headers, options \\ []) do
     url = client.server <> path
 
