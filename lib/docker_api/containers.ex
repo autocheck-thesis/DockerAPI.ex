@@ -16,7 +16,7 @@ defmodule DockerAPI.Containers do
   Create and start a container with a randomly generated name
 
   See [API Docs](https://docs.docker.com/reference/api/docker_remote_api_v1.20/#create-a-container) for
-  map() keys.
+  map keys.
   """
   @spec run(map(), DockerAPI.Client.t()) :: map()
   def run(container, client) do
@@ -29,7 +29,7 @@ defmodule DockerAPI.Containers do
   Create and start a container with a specific name.
 
   See [API Docs](https://docs.docker.com/reference/api/docker_remote_api_v1.20/#create-a-container) for
-  map() keys.
+  map keys.
   """
   @spec run(String.t(), map(), DockerAPI.Client.t()) :: map()
   def run(name, container, client) do
@@ -42,7 +42,7 @@ defmodule DockerAPI.Containers do
   Create a container with a randomly generated name
 
   See [API Docs](https://docs.docker.com/reference/api/docker_remote_api_v1.20/#create-a-container) for
-  map() keys.
+  map keys.
   """
   @spec create(map(), DockerAPI.Client.t()) :: map()
   def create(container, client) do
@@ -53,7 +53,7 @@ defmodule DockerAPI.Containers do
   Create a container with a specific name.
 
   See [API Docs](https://docs.docker.com/reference/api/docker_remote_api_v1.20/#create-a-container) for
-  map() keys.
+  map keys.
   """
   @spec create(String.t(), map(), DockerAPI.Client.t()) :: map()
   def create(name, container, client) do
