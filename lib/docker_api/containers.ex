@@ -101,13 +101,19 @@ defmodule DockerAPI.Containers do
         client,
         params \\ %{stderr: true, stdout: true, follow: true, timestamp: false}
       )
+
+  def logs(
+        container,
+        client,
+        params
+      )
       when is_map(container),
       do: logs(container["Id"], client)
 
   def logs(
         container,
         client,
-        params \\ %{stderr: true, stdout: true, follow: true, timestamp: false}
+        params
       ) do
     url = "/containers/#{container}/logs?" <> URI.encode_query(params)
     R.stream_request(client, :get, url)
@@ -121,10 +127,12 @@ defmodule DockerAPI.Containers do
   """
   @spec attach(String.t() | map(), DockerAPI.Client.t(), map()) :: Enumerable.t()
   def attach(container, client, params \\ %{stream: true, stdout: true, stderr: true})
+
+  def attach(container, client, params)
       when is_map(container),
       do: attach(container["Id"], client, params)
 
-  def attach(container, client, params \\ %{stream: true, stdout: true, stderr: true}) do
+  def attach(container, client, params) do
     url = "/containers/#{container}/attach?" <> URI.encode_query(params)
     R.stream_request(client, :post, url)
   end
