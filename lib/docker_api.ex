@@ -20,7 +20,7 @@ defmodule DockerAPI do
 
   defmodule Client do
     # @moduledoc false
-    defstruct ssl_options: [], server: "https://127.0.0.1:2376"
+    defstruct ssl_options: [], server: "http://127.0.0.1:2375"
     @type t :: %__MODULE__{server: String.t(), ssl_options: keyword()}
   end
 
@@ -35,22 +35,26 @@ defmodule DockerAPI do
   """
   @spec connect() :: Client.t()
   def connect do
-    host_env = System.get_env("DOCKER_HOST")
+    case System.get_env("DOCKER_HOST") do
+      nil ->
+        %Client{}
 
-    case System.get_env("DOCKER_TLS_VERIFY") do
-      "1" ->
-        cert_path_env = System.get_env("DOCKER_CERT_PATH")
+      host_env ->
+        case System.get_env("DOCKER_TLS_VERIFY") do
+          "1" ->
+            cert_path_env = System.get_env("DOCKER_CERT_PATH")
 
-        %Client{
-          server: uri_to_string(URI.parse(host_env)),
-          ssl_options: [
-            certfile: to_charlist(cert_path_env <> "/cert.pem"),
-            keyfile: to_charlist(cert_path_env <> "/key.pem")
-          ]
-        }
+            %Client{
+              server: uri_to_string(URI.parse(host_env)),
+              ssl_options: [
+                certfile: to_charlist(cert_path_env <> "/cert.pem"),
+                keyfile: to_charlist(cert_path_env <> "/key.pem")
+              ]
+            }
 
-      _ ->
-        %Client{server: uri_to_string(URI.parse(host_env), false)}
+          _ ->
+            %Client{server: uri_to_string(URI.parse(host_env), false)}
+        end
     end
   end
 
