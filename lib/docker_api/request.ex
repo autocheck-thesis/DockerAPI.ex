@@ -53,7 +53,7 @@ defmodule DockerAPI.Request do
       fn -> HTTPoison.request!(method, url, body, headers, options) end,
       fn
         %HTTPoison.AsyncResponse{} = resp ->
-          handle_async_resp(resp, true)
+          handle_async_resp(resp, true, :infinity)
 
         # last accumulator when emitting :end
         {:end, resp} ->
@@ -65,7 +65,7 @@ defmodule DockerAPI.Request do
     )
   end
 
-  defp handle_async_resp(%HTTPoison.AsyncResponse{id: id} = resp, emit_end) do
+  defp handle_async_resp(%HTTPoison.AsyncResponse{id: id} = resp, emit_end, timeout) do
     receive do
       %HTTPoison.AsyncStatus{id: ^id, code: _code} ->
         # IO.inspect(code, label: "STATUS: ")
@@ -91,7 +91,7 @@ defmodule DockerAPI.Request do
           {:halt, resp}
         end
     after
-      60_000 -> raise "receive timeout"
+      timeout -> raise "receive timeout"
     end
   end
 
