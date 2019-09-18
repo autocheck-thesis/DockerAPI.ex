@@ -5,6 +5,8 @@ defmodule DockerAPI.Request do
     {"Content-Type", "application/json"}
   ]
 
+  @timeout 3600_000
+
   alias DockerAPI.Client
 
   @spec get(Client.t(), binary(), List.t()) :: any
@@ -40,23 +42,22 @@ defmodule DockerAPI.Request do
     options =
       Keyword.merge(options,
         hackney: [ssl_options: client.ssl_options],
-        recv_timeout: 60_000,
+        recv_timeout: @timeout,
         stream_to: self(),
         async: :once
       )
-
-    if :ets.whereis(:request_headers) == :undefined do
-      :ets.new(:request_headers, [:set, :named_table])
-    end
 
     Stream.resource(
       fn -> HTTPoison.request!(method, url, body, headers, options) end,
       fn
         %HTTPoison.AsyncResponse{} = resp ->
-          handle_async_resp(resp, true, :infinity)
+          handle_async_resp(resp)
+
+        {headers, %HTTPoison.AsyncResponse{} = resp} ->
+          handle_async_resp(resp, headers)
 
         # last accumulator when emitting :end
-        {:end, resp} ->
+        {:end, {_headers, resp}} ->
           {:halt, resp}
       end,
       fn %HTTPoison.AsyncResponse{id: id} ->
@@ -65,33 +66,24 @@ defmodule DockerAPI.Request do
     )
   end
 
-  defp handle_async_resp(%HTTPoison.AsyncResponse{id: id} = resp, emit_end, timeout) do
+  defp handle_async_resp(%HTTPoison.AsyncResponse{id: id} = resp, headers \\ nil) do
     receive do
       %HTTPoison.AsyncStatus{id: ^id, code: _code} ->
-        # IO.inspect(code, label: "STATUS: ")
         HTTPoison.stream_next(resp)
-        {[], resp}
+        {[], {headers, resp}}
 
       %HTTPoison.AsyncHeaders{id: ^id, headers: headers} ->
-        # IO.inspect(headers, label: "HEADERS: ")
         HTTPoison.stream_next(resp)
-        :ets.insert(:request_headers, {id, headers})
-        {[], resp}
+        {[], {headers, resp}}
 
       %HTTPoison.AsyncChunk{id: ^id, chunk: chunk} ->
         HTTPoison.stream_next(resp)
-        # :erlang.garbage_collect()
-        [{_, headers}] = :ets.lookup(:request_headers, id)
-        {[decode_body(chunk, headers)], resp}
+        {[decode_body(chunk, headers)], {headers, resp}}
 
       %HTTPoison.AsyncEnd{id: ^id} ->
-        if emit_end do
-          {[:end], {:end, resp}}
-        else
-          {:halt, resp}
-        end
+        {[:end], {:end, {headers, resp}}}
     after
-      timeout -> raise "receive timeout"
+      @timeout -> raise "receive timeout"
     end
   end
 
