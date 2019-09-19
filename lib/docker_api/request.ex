@@ -26,7 +26,8 @@ defmodule DockerAPI.Request do
 
     options =
       Keyword.merge(options,
-        hackney: [ssl_options: client.ssl_options]
+        hackney: [ssl_options: client.ssl_options],
+        recv_timeout: @timeout
       )
 
     {:ok, raw_reply} = HTTPoison.request(method, url, body, headers, options)
