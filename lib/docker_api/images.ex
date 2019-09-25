@@ -10,6 +10,15 @@ defmodule DockerAPI.Images do
   end
 
   @doc """
+  Returns whether an image exists
+  """
+  @spec exists(DockerAPI.Client.t(), String.t()) :: boolean()
+  def exists(client, tag) do
+    R.get(client, "/images/json")
+    |> Enum.find_value(false, fn %{"RepoTags" => repo_tags} -> tag in repo_tags end)
+  end
+
+  @doc """
   Create an image either by pulling it from the registry or by importing it
   """
   @spec create(map(), DockerAPI.Client.t()) :: :ok
