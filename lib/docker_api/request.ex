@@ -9,18 +9,18 @@ defmodule DockerAPI.Request do
 
   alias DockerAPI.Client
 
-  @spec get(Client.t(), binary(), List.t()) :: any
+  @spec get(Client.t(), binary(), List.t()) :: any | no_return()
   def get(client, path, headers \\ @default_headers), do: request(client, :get, path, "", headers)
 
-  @spec delete(Client.t(), binary(), List.t()) :: any
+  @spec delete(Client.t(), binary(), List.t()) :: any | no_return()
   def delete(client, path, headers \\ @default_headers),
     do: request(client, :delete, path, "", headers)
 
-  @spec post(Client.t(), binary(), binary(), List.t()) :: any
+  @spec post(Client.t(), binary(), binary(), List.t()) :: any | no_return()
   def post(client, path, body \\ "{}", headers \\ @default_headers),
     do: request(client, :post, path, body, headers)
 
-  @spec request(Client.t(), atom(), binary(), binary(), List.t(), List.t()) :: any
+  @spec request(Client.t(), atom(), binary(), binary(), List.t(), List.t()) :: any | no_return()
   def request(client, method, path, body \\ "", headers \\ @default_headers, options \\ []) do
     url = client.server <> path
 
@@ -30,8 +30,7 @@ defmodule DockerAPI.Request do
         recv_timeout: @timeout
       )
 
-    {:ok, raw_reply} = HTTPoison.request(method, url, body, headers, options)
-    # IO.inspect(raw_reply)
+    raw_reply = HTTPoison.request!(method, url, body, headers, options)
     raw_reply |> body_parser
   end
 
@@ -49,16 +48,20 @@ defmodule DockerAPI.Request do
       )
 
     Stream.resource(
-      fn -> HTTPoison.request!(method, url, body, headers, options) end,
+      fn -> HTTPoison.request(method, url, body, headers, options) end,
       fn
-        %HTTPoison.AsyncResponse{} = resp ->
+        # First response
+        {:ok, %HTTPoison.AsyncResponse{} = resp} ->
           handle_async_resp(resp)
 
-        {headers, %HTTPoison.AsyncResponse{} = resp} ->
+        # Succeeding response
+        {%HTTPoison.AsyncResponse{} = resp, headers} ->
           handle_async_resp(resp, headers)
 
-        # last accumulator when emitting :end
-        {:end, {_headers, resp}} ->
+        {:end, resp} ->
+          {:halt, resp}
+
+        {:error, resp} ->
           {:halt, resp}
       end,
       fn %HTTPoison.AsyncResponse{id: id} ->
@@ -67,24 +70,35 @@ defmodule DockerAPI.Request do
     )
   end
 
-  defp handle_async_resp(%HTTPoison.AsyncResponse{id: id} = resp, headers \\ nil) do
+  @spec handle_async_resp(HTTPoison.AsyncResponse.t(), [any()]) ::
+          {[any()], {HTTPoison.AsyncResponse.t(), [any()]}}
+          | {[:end], {:end, HTTPoison.AsyncResponse.t()}}
+          | {[HTTPoison.Error.t()], {:error, HTTPoison.AsyncResponse.t()}}
+          | {[:timeout], {:timeout, HTTPoison.AsyncResponse.t()}}
+  defp handle_async_resp(%HTTPoison.AsyncResponse{} = resp, headers \\ []) do
     receive do
-      %HTTPoison.AsyncStatus{id: ^id, code: _code} ->
-        HTTPoison.stream_next(resp)
-        {[], {headers, resp}}
+      %HTTPoison.AsyncStatus{} ->
+        case HTTPoison.stream_next(resp) do
+          {:ok, _} -> {[], {resp, headers}}
+          {:error, _} = error -> {[error], {:error, resp}}
+        end
 
-      %HTTPoison.AsyncHeaders{id: ^id, headers: headers} ->
-        HTTPoison.stream_next(resp)
-        {[], {headers, resp}}
+      %HTTPoison.AsyncHeaders{headers: headers} ->
+        case HTTPoison.stream_next(resp) do
+          {:ok, _} -> {[], {resp, headers}}
+          {:error, _} = error -> {[error], {:error, resp}}
+        end
 
-      %HTTPoison.AsyncChunk{id: ^id, chunk: chunk} ->
-        HTTPoison.stream_next(resp)
-        {[decode_body(chunk, headers)], {headers, resp}}
+      %HTTPoison.AsyncChunk{chunk: chunk} ->
+        case HTTPoison.stream_next(resp) do
+          {:ok, _} -> {[decode_body(chunk, headers)], {resp, headers}}
+          {:error, _} = error -> {[error], {:error, resp}}
+        end
 
-      %HTTPoison.AsyncEnd{id: ^id} ->
-        {[:end], {:end, {headers, resp}}}
+      %HTTPoison.AsyncEnd{} ->
+        {[:end], {:end, resp}}
     after
-      @timeout -> raise "receive timeout"
+      @timeout -> {[{:error, :timeout}], {:error, resp}}
     end
   end
 
