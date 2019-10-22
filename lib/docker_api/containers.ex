@@ -108,7 +108,7 @@ defmodule DockerAPI.Containers do
         params
       )
       when is_map(container),
-      do: logs(container["Id"], client)
+      do: logs(container["Id"], client, params)
 
   def logs(
         container,
